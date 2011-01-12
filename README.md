@@ -15,7 +15,7 @@ SwfRuby is a utilities to dump or manipulate a SWF with Ruby.
 Installation
 ============
 
-    $ git clone http://github.com/tmtysk/swf_ruby
+    $ git clone git://github.com/tmtysk/swf_ruby.git
     $ cd swf_ruby
     $ rake install
 
