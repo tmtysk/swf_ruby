@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+#  vim: set fileencoding=utf-8 filetype=ruby ts=2 : 
+# SWF中のJpeg(DefineBitsJpeg2)イメージを差し替える.
+require 'swf_ruby'
+
+print "Specify target swf path, offset to jpeg, new jpeg path for arguments." if ARGV.size != 3
+
+swf = File.open(ARGV[0], "rb").read
+st = SwfRuby::SwfTamperer.new
+jpeg = File.open(ARGV[2], "rb").read
+repl_targets = [
+  SwfRuby::Jpeg2ReplaceTarget.new(ARGV[1].to_i, jpeg)
+]
+
+print st.replace(swf, repl_targets)

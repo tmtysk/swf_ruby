@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+#  vim: set fileencoding=utf-8 filetype=ruby ts=2 : 
+#  SWF構造をダンプし、タグ群情報を出力する. DefineSpriteとDoActionに対しては、さらに潜ってダンプする.
+
+require 'swf_ruby'
+
+print "Specify swf file path to dump for argument." if ARGV.size != 1
+swf = SwfRuby::SwfDumper.new
+swf.open(ARGV[0])
+swf.tags.each_with_index do |tag, i|
+  print "#{SwfRuby::Swf::TAG_TYPE[tag.code]}, offset: #{swf.tags_addresses[i]}, length: #{tag.length}\n"
+  if tag.code == 39
+    # DefineSprite
+    sd = SwfRuby::SpriteDumper.new
+    sd.dump(tag)
+    print "  Sprite ID: #{sd.sprite_id}, Frame Count: #{sd.frame_count}\n"
+    sd.tags.each_with_index do |tag2, k|
+      print "    #{SwfRuby::Swf::TAG_TYPE[tag2.code]}, offset: #{sd.tags_addresses[k]}, length: #{tag2.length}\n"
+      if tag2.code == 12
+        # DoAction
+        dad = SwfRuby::DoActionDumper.new
+        dad.dump(swf.swf[swf.tags_addresses[i] + sd.tags_addresses[k], tag2.length])
+        dad.actions.each_with_index do |ar, l|
+          print "      #{SwfRuby::Swf::ACTION_RECORDS[ar.code]}, offset: #{dad.actions_addresses[l]}, length: #{ar.length}\n"
+          if ar.code == 150
+            # ActionPush
+            ap = SwfRuby::Swf::ActionPush.new(ar)
+            print "       type: #{ap.data_type}, offset: #{dad.actions_addresses[l]}, data: #{ap.data}\n"
+          end
+        end
+      end
+    end
+  end
+  if tag.code == 12
+    # DoAction
+    dad = SwfRuby::DoActionDumper.new
+    dad.dump(swf.swf[swf.tags_addresses[i], tag.length])
+    dad.actions.each_with_index do |ar, j|
+      print "  #{SwfRuby::Swf::ACTION_RECORDS[ar.code]}, offset: #{dad.actions_addresses[j]}, length: #{ar.length}\n"
+      if ar.code == 150
+        # ActionPush
+        ap = SwfRuby::Swf::ActionPush.new(ar)
+        print "    type: #{ap.data_type}, offset: #{dad.actions_addresses[j]}, data: #{ap.data}\n"
+      end
+    end
+  end
+end
+
+print "\n"
