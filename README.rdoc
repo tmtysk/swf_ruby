@@ -11,15 +11,10 @@ SwfRuby is a utilities to dump or manipulate SWF with Ruby.
   * Used from 'swf_jpeg_replace' command.
  * compatible on ruby-1.8.7 and ruby-1.9.2.
 
-= Dependencies
-
-* bundler (>= 1.0.0.rc.5)
-
 = Installation
 
  $ git clone http://github.com/tmtysk/swf_ruby
  $ cd swf_ruby
- $ bundle install
  $ rake install
 
 = Command Usage
