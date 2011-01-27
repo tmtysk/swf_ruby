@@ -18,20 +18,20 @@ module SwfRuby
         image.get_pixels(0, 0, image.columns, image.rows).each_with_index do |pixel,i|
           break if colormap.length > 255
           idx = colormap.index(pixel)
-          if idx then
+          if idx
             data << [idx].pack("C")
           else
             colormap << pixel
             data << [colormap.length-1].pack("C")
           end
-          if (i+1) % image.rows == 0 then
+          if (i+1) % image.columns == 0
             # padding
             data += [0].pack("C") * (4-image.columns&3)
           end
         end
 
         # checking image format by size of colormap
-        if colormap.length > 255 then
+        if colormap.length > 255
           # format=5
           # reset and re-build data_stream without colopmap
           data = ""
@@ -48,7 +48,7 @@ module SwfRuby
           # added colormap before data_stream
           data = colormap.inject("") { |r,c|
             opacity = (MaxRGB-c.opacity) >> ShiftDepth
-            if opacity == 0 then
+            if opacity == 0
               r +=
                 [0].pack("C") +
                 [0].pack("C") +

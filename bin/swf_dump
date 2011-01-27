@@ -4,7 +4,11 @@
 
 require 'swf_ruby'
 
-print "Specify swf file path to dump for argument." if ARGV.size != 1
+if ARGV.size != 1
+  print "Specify swf file path to dump for argument.\n"
+  exit
+end
+
 swf = SwfRuby::SwfDumper.new
 swf.open(ARGV[0])
 swf.tags.each_with_index do |tag, i|

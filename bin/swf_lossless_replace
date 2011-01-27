@@ -3,7 +3,10 @@
 # SWF中のLossless(DefineBitsLossless2)イメージを差し替える.
 require 'swf_ruby'
 
-print "Specify target swf path, offset to image, new image(png,gif) path for arguments." if ARGV.size != 3
+if ARGV.size != 3
+  print "Specify target swf path, offset to image, new image(png,gif) path for arguments.\n"
+  exit
+end
 
 swf = File.open(ARGV[0], "rb").read
 st = SwfRuby::SwfTamperer.new
