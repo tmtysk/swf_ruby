@@ -14,6 +14,15 @@ module SwfRuby
     end
   end
 
+  class Lossless2ReplaceTarget < ReplaceTarget
+    attr_accessor :image
+
+    def initialize(offset, image)
+      @offset = offset
+      @image = image
+    end
+  end
+
   class AsVarReplaceTarget < ReplaceTarget
     attr_accessor :do_action_offset
     attr_accessor :str
