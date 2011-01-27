@@ -9,11 +9,20 @@ SwfRuby is a utilities to dump or manipulate a SWF with Ruby.
     * Used from 'swf_dump' command.
   * SwfRuby::SwfTamperer
     * Manipulating(replagcing) resources in SWF.
-    * Used from 'swf_jpeg_replace' command.
+    * Used from 'swf_jpeg_replace' and 'swf_lossless_replace' command.
   * compatible on ruby-1.8.7 and ruby-1.9.2.
+
+Dependencies
+============
+
+* RMagick >= 2.13.0 (ImageMagick >= 6.5.7)
 
 Installation
 ============
+
+    $ gem install swf_ruby
+
+    or
 
     $ git clone git://github.com/tmtysk/swf_ruby.git
     $ cd swf_ruby
@@ -40,7 +49,13 @@ Replacing Jpeg in SWF
 ---------------------
 
     $ swf_jpeg_replace samples/sample.swf 623 samples/bg.jpg > samples/sample2.swf
-    # <623> is offset to Jpeg resource getting by 'swf_dump'.
+    # <623> is offset to DefineBitsJPEG2 resource getting by 'swf_dump'.
+
+Replacing Jpeg in SWF
+---------------------
+
+    $ swf_lossless_replace samples/sample.swf 120 samples/icon.gif > samples/sample3.swf
+    # <120> is offset to DefineBitsLossless2 resource getting by 'swf_dump'.
 
 Thanks
 ======

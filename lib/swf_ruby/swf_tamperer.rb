@@ -2,9 +2,6 @@
 module SwfRuby
   # Swfに含まれるリソースを置換するクラス.
   class SwfTamperer
-    ShiftDepth = Magick::QuantumDepth - 8
-    MaxRGB = 2 ** Magick::QuantumDepth - 1
-
     # 対象Swf(バイナリ)のリソースを置換.
     # 置換対象はReplaceTargetオブジェクトの配列で渡す.
     def replace(swf, replace_targets)
@@ -92,9 +89,8 @@ module SwfRuby
     end
 
     # DefineBitsLossless2のイメージバイナリを置換.
-    def repl_lossless2(swf, offset, image_bytearray)
+    def repl_lossless2(swf, offset, lossless)
       swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
-      lossless = SwfRuby::Swf::BitsLossless2.new(image_bytearray)
 
       # replace lossless2 data
       if lossless.format == 3

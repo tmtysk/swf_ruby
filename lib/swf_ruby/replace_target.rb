@@ -19,7 +19,7 @@ module SwfRuby
 
     def initialize(offset, image)
       @offset = offset
-      @image = image
+      @image = SwfRuby::Swf::BitsLossless2.new(image)
     end
   end
 
