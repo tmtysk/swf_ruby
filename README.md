@@ -51,8 +51,8 @@ Replacing Jpeg in SWF
     $ swf_jpeg_replace samples/sample.swf 623 samples/bg.jpg > samples/sample2.swf
     # <623> is offset to DefineBitsJPEG2 resource getting by 'swf_dump'.
 
-Replacing Jpeg in SWF
----------------------
+Replacing GIF/PNG in SWF
+------------------------
 
     $ swf_lossless_replace samples/sample.swf 120 samples/icon.gif > samples/sample3.swf
     # <120> is offset to DefineBitsLossless2 resource getting by 'swf_dump'.
