@@ -9,8 +9,6 @@ module SwfRuby
         case rt
         when Jpeg2ReplaceTarget
           swf = self.repl_jpeg2(swf, rt.offset, rt.jpeg)
-        when Lossless2ReplaceTarget
-          swf = self.repl_lossless2(swf, rt.offset, rt.image)
         when AsVarReplaceTarget
           swf = self.repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offsets)
         end
@@ -85,60 +83,6 @@ module SwfRuby
         swf[offset, 2] = [(((record_header >> 6) & 1023) << 6) + target_jpeg_length + 2].pack("v")
         swf[4, 4] = [swf[4, 4].unpack("V").first + delta_jpeg_length].pack("V")
       end
-      swf
-    end
-
-    # DefineBitsLossless2のイメージバイナリを置換.
-    def repl_lossless2(swf, offset, lossless)
-      swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
-
-      org_format = swf[offset+8, 1].unpack("C").first
-      # replace lossless2 data
-      if lossless.format == 3
-        if org_format == 3
-          org_image_length = swf[offset+2, 4].unpack("i").first - 8
-          delta_length = lossless.zlib_bitmap_data.size - org_image_length
-          swf[offset+14, org_image_length] = lossless.zlib_bitmap_data
-          swf[offset+13, 1] = [lossless.color_table_size].pack("C")
-          swf[offset+11, 2] = [lossless.height].pack("v")
-          swf[offset+9, 2] = [lossless.width].pack("v")
-          swf[offset+8, 1] = [lossless.format].pack("C")
-          swf[offset+2, 4] = [lossless.zlib_bitmap_data.size + 8].pack("i")
-        elsif org_format == 5
-          org_image_length = swf[offset+2, 4].unpack("i").first - 7
-          delta_length = lossless.zlib_bitmap_data.size - org_image_length + 1
-          swf[offset+13, org_image_length] = [lossless.color_table_size].pack("C") + lossless.zlib_bitmap_data
-          swf[offset+11, 2] = [lossless.height].pack("v")
-          swf[offset+9, 2] = [lossless.width].pack("v")
-          swf[offset+8, 1] = [lossless.format].pack("C")
-          swf[offset+2, 4] = [lossless.zlib_bitmap_data.size + 8].pack("i")
-        else
-          raise ReplaceTargetError
-        end
-      elsif format == 5
-        if org_format == 3
-          org_image_length = swf[offset+2, 4].unpack("i").first - 8
-          delta_length = lossless.zlib_bitmap_data.size - org_image_length - 1
-          swf[offset+13, org_image_length+1] = lossless.zlib_bitmap_data
-          swf[offset+11, 2] = [lossless.height].pack("v")
-          swf[offset+9, 2] = [lossless.width].pack("v")
-          swf[offset+8, 1] = [lossless.format].pack("C")
-          swf[offset+2, 4] = [lossless.zlib_bitmap_data.size + 7].pack("i")
-        elsif org_format == 5
-          org_image_length = swf[offset+2, 4].unpack("i").first - 7
-          delta_length = lossless.zlib_bitmap_data.size - org_image_length
-          swf[offset+13, org_image_length] = lossless.zlib_bitmap_data
-          swf[offset+11, 2] = [lossless.height].pack("v")
-          swf[offset+9, 2] = [lossless.width].pack("v")
-          swf[offset+8, 1] = [lossless.format].pack("C")
-          swf[offset+2, 4] = [lossless.zlib_bitmap_data.size + 7].pack("i")
-        else
-          raise ReplaceTargetError
-        end
-      else
-        raise ReplaceTargetError
-      end
-      swf[4, 4] = [swf[4, 4].unpack("V").first + delta_length].pack("V")
       swf
     end
   end
