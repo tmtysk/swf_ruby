@@ -12,7 +12,7 @@ module SwfRuby
         when Lossless2ReplaceTarget
           swf = self.repl_lossless2(swf, rt.offset, rt.image)
         when AsVarReplaceTarget
-          swf = self.repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offsets)
+          swf = self.repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offset)
         end
       end
       swf
@@ -21,7 +21,7 @@ module SwfRuby
     protected
 
     # ActionScriptに含まれる文字列を置換.
-    def repl_action_push_string(swf, do_action_offset, action_push_offset, str, parent_sprite_offsets = [])
+    def repl_action_push_string(swf, do_action_offset, action_push_offset, str, parent_sprite_offset = nil)
       swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
       str.force_encoding("ASCII-8BIT") if str.respond_to? :force_encoding
       record_header = swf[do_action_offset, 2].unpack("v").first
@@ -41,7 +41,7 @@ module SwfRuby
       swf[action_push_offset+4, org_str_length] = str
       swf[action_push_offset+1, 2] = [action_push_len + delta_str_length].pack("v")
       swf[do_action_offset+2, 4] = [do_action_len + delta_str_length].pack("V")
-      parent_sprite_offsets.sort.reverse.each do |parent_sprite_offset|
+      if parent_sprite_offset
         swf[parent_sprite_offset+2, 4] = [swf[parent_sprite_offset+2, 4].unpack("V").first + delta_str_length].pack("V")
       end
       swf[4, 4] = [swf[4, 4].unpack("V").first + delta_str_length].pack("V")

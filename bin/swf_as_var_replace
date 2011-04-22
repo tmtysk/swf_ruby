@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+#  vim: set fileencoding=utf-8 filetype=ruby ts=2 : 
+# SWF中のAS変数の値(foo = var; な箇所に限る)を差し替える.
+require 'swf_ruby'
+
+if ARGV.size != 3
+  print "Specify target swf path, AS var name, and new value for arguments.\n"
+  exit
+end
+
+swf_dumper = SwfRuby::SwfDumper.new
+swf_dumper.open(ARGV[0])
+
+repl_targets = SwfRuby::AsVarReplaceTarget.build_by_var_name(swf_dumper, ARGV[1]).collect do |t|
+  t.str = ARGV[2].dup
+  t
+end
+
+st = SwfRuby::SwfTamperer.new
+
+print st.replace(swf_dumper.swf.dup, repl_targets)

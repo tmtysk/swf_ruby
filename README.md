@@ -9,7 +9,7 @@ SwfRuby is a utilities to dump or manipulate a SWF with Ruby.
     * Used from 'swf_dump' command.
   * SwfRuby::SwfTamperer
     * Manipulating(replagcing) resources in SWF.
-    * Used from 'swf_jpeg_replace' and 'swf_lossless_replace' command.
+    * Used from 'swf_jpeg_replace', 'swf_lossless_replace', and 'swf_as_var_replace' command.
   * compatible on ruby-1.8.7 and ruby-1.9.2.
 
 Dependencies
@@ -56,6 +56,12 @@ Replacing GIF/PNG in SWF
 
     $ swf_lossless_replace samples/sample.swf 120 samples/icon.gif > samples/sample3.swf
     # <120> is offset to DefineBitsLossless2 resource getting by 'swf_dump'.
+
+Replacing ActionScript Variable in SWF
+--------------------------------------
+
+    $ swf_as_var_replace foo.swf bar piyo > foo2.swf
+    # <bar> is variable name. <piyo> is new value to the variable.
 
 Thanks
 ======

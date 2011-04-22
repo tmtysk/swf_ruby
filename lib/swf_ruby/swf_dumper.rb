@@ -40,5 +40,6 @@ module SwfRuby
       end
       self
     end
+
   end
 end
