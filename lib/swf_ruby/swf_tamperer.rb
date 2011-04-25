@@ -13,12 +13,19 @@ module SwfRuby
           swf = self.repl_lossless2(swf, rt.offset, rt.image)
         when AsVarReplaceTarget
           swf = self.repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offset)
+        when SpriteReplaceTarget
+          swf = self.repl_sprite(swf, rt.offset, rt.define_tags, rt.control_tags)
         end
       end
       swf
     end
 
     protected
+
+    # DefineSpriteを置換. 置き換え対象のSWFが含むDefine系タグは、直前に挿入する.
+    def repl_sprite(swf, offset, define_tags, control_tags)
+      # TODO
+    end
 
     # ActionScriptに含まれる文字列を置換.
     def repl_action_push_string(swf, do_action_offset, action_push_offset, str, parent_sprite_offset = nil)

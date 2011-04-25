@@ -23,6 +23,56 @@ module SwfRuby
     end
   end
 
+  class SpriteReplaceTarget < ReplaceTarget
+    attr_accessor :swf
+    attr_accessor :define_tags
+    attr_accessor :control_tags
+    attr_accessor :idmap
+    attr_accessor :target_define_tags_string
+    attr_accessor :target_control_tags_string
+
+    def initialize(offset, swf)
+      @offset = offset
+      @swf = swf
+      @target_swf_dumper = SwfDumper.new.dump(@swf)
+      @define_tags = @target_swf_dumper.tags.select { |t| t.define_tag? }
+      @control_tags = @target_swf_dumper.tags - @define_tags
+      @idmap = {}
+    end
+
+    # 指定したインスタンス変数名に対するSpriteReplaceTargetを生成する
+    def self.build_by_instance_var_name(swf_dumper, var_name, swf)
+      # TODO var_name に対応する DefineSprite の offset の取得.
+      srt = SpriteReplaceTarget.new(offset, swf)
+      from_character_id = (swf_dumper.tags.collect { |t| t.define_tag? ? t.character_id : nil }).compact.max + 1
+      srt.target_define_tags_string = srt.build_define_tags_string(from_character_id)
+      srt.target_control_tags_string = srt.build_control_tags_string
+    end
+
+    # 置換するSWFからCharacterIdを付け替えながらDefineタグを抽出する.
+    # このとき、CharacterIdの対応付けマップを作成する.
+    def build_define_tags_string(from_character_id)
+      str = ""
+      @define_tags.each_with_index do |t, i|
+        @idmap[t.character_id] = i
+        str << t.rawdata_with_define_character_id(from_character_id + i)
+      end
+      str
+    end
+
+    def build_control_tags_string
+      str = ""
+      @control_tags.each do |t|
+        if @idmap[t.refer_character_id]
+          str << t.rawdata_with_refer_character_id(@idmap[t.refer_character_id])
+        else
+          str << t.rawdata
+        end
+      end
+      str
+    end
+  end
+
   class AsVarReplaceTarget < ReplaceTarget
     attr_accessor :do_action_offset
     attr_accessor :str
@@ -41,7 +91,7 @@ module SwfRuby
       swf_dumper.tags.each_with_index do |t, i|
         if t.code == 39
           # DefineSprite
-          sd = SwfRuby::SpriteDumper.new
+          sd = SpriteDumper.new
           sd.dump(t)
           sd.tags.each_with_index do |u, j|
             if u.code == 12
@@ -65,7 +115,7 @@ module SwfRuby
       action_records = []
       do_action_offset = 0
 
-      dad = SwfRuby::DoActionDumper.new
+      dad = DoActionDumper.new
       if sprite_dumper
         do_action_offset = parent_sprite_offset + sprite_dumper.tags_addresses[do_action_index]
         dad.dump(swf_dumper.swf[do_action_offset, sprite_dumper.tags[do_action_index].length])
@@ -83,7 +133,7 @@ module SwfRuby
           action_records[0].data.delete("\0") == var_name and
           action_records[1].code == 150
           # 対象の代入式を発見.
-          ap = SwfRuby::Swf::ActionPush.new(action_records[1])
+          ap = Swf::ActionPush.new(action_records[1])
           as_var_replace_targets << AsVarReplaceTarget.new(
             do_action_offset + dad.actions_addresses[i] - action_records[1].length,
             do_action_offset,

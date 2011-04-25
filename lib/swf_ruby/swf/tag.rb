@@ -3,10 +3,14 @@
 module SwfRuby
   module Swf
     class Tag
+      attr_reader :rawdata
       attr_reader :code
       attr_reader :length
       attr_reader :long_header
       attr_reader :data
+      attr_reader :character_id
+      attr_reader :refer_character_id
+      attr_reader :refer_character_id_offset
 
       def initialize(swf)
         swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
@@ -26,8 +30,49 @@ module SwfRuby
           @data = swf[2, @length]
           @length += 2
         end
+        @character_id = nil
+        if self.define_tag?
+          @character_id = @data[0, 2].unpack("v").first
+        end
+        @refer_character_id = nil
+        @refer_character_id_offset = nil
+        case Swf::TAG_TYPE[@code]
+        when "PlaceObject"
+          @refer_character_id_offset = 2
+          @refer_character_id = @data[offset, 2].unpack("v").first
+        when "PlaceObject2"
+          # TODO
+        when "PlaceObject3"
+          # TODO
+        when "RemoveObject"
+          # TODO
+        else 
+          # do nothing.
+        end
+        @rawdata = swf[0, @length]
+        self
       end
+
+      def rawdata_with_define_character_id(character_id)
+        if self.define_tag?
+          offset = @long_header ? 6 : 2
+          @rawdata[offset, 2] = [character_id].pack("v")
+        end
+        @rawdata
+      end
+
+      def rawdata_with_refer_character_id(character_id)
+        @rawdata[@refer_character_id_offset, 2] = [character_id].pack("v") if @refer_character_id_offset
+        @rawdata
+      end
+
+      def define_tag?
+        Swf::TAG_TYPE[@code] =~ /^Define/
+      end
+
     end
+
+    class TagError < StandardError; end
 
     TAG_TYPE = {
       0=>"End",

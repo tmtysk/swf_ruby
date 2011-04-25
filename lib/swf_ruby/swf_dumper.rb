@@ -7,6 +7,7 @@ module SwfRuby
     attr_reader :header
     attr_reader :tags
     attr_reader :tags_addresses
+    attr_accessor :character_ids
 
     # 初期化.
     def initialize
@@ -27,7 +28,7 @@ module SwfRuby
     # ダンプして構造をインスタンス変数に格納.
     def dump(swf)
       @swf = swf
-      @header = Swf::Header.new(@swf)
+      @header, @swf = Swf::Header.parse(@swf)
       @tags = []
       @tags_addresses = []
       tags_length = 0

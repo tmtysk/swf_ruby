@@ -12,7 +12,8 @@ end
 swf = SwfRuby::SwfDumper.new
 swf.open(ARGV[0])
 swf.tags.each_with_index do |tag, i|
-  print "#{SwfRuby::Swf::TAG_TYPE[tag.code]}, offset: #{swf.tags_addresses[i]}, length: #{tag.length}\n"
+  character_id = tag.character_id ? "character_id: #{tag.character_id}, " : ""
+  print "#{SwfRuby::Swf::TAG_TYPE[tag.code]}, offset: #{swf.tags_addresses[i]}, #{character_id}length: #{tag.length}\n"
   if tag.code == 39
     # DefineSprite
     sd = SwfRuby::SpriteDumper.new
