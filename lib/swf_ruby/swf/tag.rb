@@ -11,6 +11,7 @@ module SwfRuby
       attr_reader :character_id
       attr_reader :refer_character_id
       attr_reader :refer_character_id_offset
+      attr_reader :refer_character_inst_name
 
       def initialize(swf)
         swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
@@ -36,16 +37,58 @@ module SwfRuby
         end
         @refer_character_id = nil
         @refer_character_id_offset = nil
+        @refer_character_inst_name = nil
+        data_offset = @long_header ? 6 : 2
         case Swf::TAG_TYPE[@code]
         when "PlaceObject"
-          @refer_character_id_offset = 2
-          @refer_character_id = @data[offset, 2].unpack("v").first
+          @refer_character_id_offset = data_offset
+          @refer_character_id = @data[0, 2].unpack("v").first
         when "PlaceObject2"
-          # TODO
+          flags = @data[0].unpack("C").first
+          offset = 3
+          if flags & 2 == 2
+            @refer_character_id_offset = data_offset + offset
+            @refer_character_id = @data[offset, 2].unpack("v").first
+            offset += 2
+          end
+          if flags & 32 == 32
+            if flags & 4 == 4
+              matrix = SwfRuby::Swf::Matrix.new(@data[offset..-1])
+              offset += matrix.length
+            end
+            if flags & 8 == 8
+              cxtfm = SwfRuby::Swf::Cxformwithalpha.new(@data[offset..-1])
+              offset += cxtfm.length
+            end
+            offset += 2 if flags & 16
+            @refer_character_inst_name = SwfRuby::Swf::SwfString.new(@data[offset..-1]).string
+          end
         when "PlaceObject3"
-          # TODO
+          flags = @data[0, 2].unpack("n").first
+          offset = 4
+          if flags & 8 == 8
+            class_name = SwfRuby::Swf::SwfString.new(@data[offset..-1])
+            offset += class_name.length
+          end
+          if flags & 512 == 512
+            @refer_character_id_offset = data_offset + offset
+            @refer_character_id = @data[offset, 2].unpack("v").first
+          end
+          if flags & 8192 == 8192
+            if flags & 1024 == 1024
+              matrix = SwfRuby::Swf::Matrix.new(@data[offset..-1])
+              offset += matrix.length
+            end
+            if flags & 2048 == 2048
+              cxtfm = SwfRuby::Swf::Cxformwithalpha.new(@data[offset..-1])
+              offset += cxtfm.length
+            end
+            offset += 2 if flags & 4096 == 4096
+            @refer_character_inst_name = SwfRuby::Swf::SwfString.new(@data[offset..-1]).string
+          end
         when "RemoveObject"
-          # TODO
+          @refer_character_id_offset = data_offset
+          @refer_character_id = @data[0, 2].unpack("v").first
         else 
           # do nothing.
         end

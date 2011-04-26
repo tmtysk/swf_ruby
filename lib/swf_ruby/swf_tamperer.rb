@@ -14,7 +14,7 @@ module SwfRuby
         when AsVarReplaceTarget
           swf = self.repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offset)
         when SpriteReplaceTarget
-          swf = self.repl_sprite(swf, rt.offset, rt.define_tags, rt.control_tags)
+          swf = self.repl_sprite(swf, rt.offset, rt.refer_character_id, rt.define_tags, rt.control_tags)
         end
       end
       swf
@@ -22,8 +22,9 @@ module SwfRuby
 
     protected
 
-    # DefineSpriteを置換. 置き換え対象のSWFが含むDefine系タグは、直前に挿入する.
-    def repl_sprite(swf, offset, define_tags, control_tags)
+    # DefineSpriteを置換. (厳密にはインスタンス変数が参照する新しいDefineSpriteを挿入.)
+    # 新しいSWFが含むDefine系タグは、DefineSpriteの直前に挿入する.
+    def repl_sprite(swf, offset, refer_character_id, define_tags, control_tags)
       # TODO
     end
 

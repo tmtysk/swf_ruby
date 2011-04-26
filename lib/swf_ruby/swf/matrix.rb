@@ -18,7 +18,7 @@ module SwfRuby
 
       def initialize(bytearray)
         bits_str = bytearray.unpack("B*").first
-        @has_scale = bits_str.to_i(2)
+        @has_scale = bits_str[0].to_i(2)
         offset = 1
         if @has_scale == 1
           @n_scale_bits = bits_str[offset, 5].to_i(2)
