@@ -8,13 +8,13 @@ module SwfRuby
       replace_targets.sort_by { |a| a.offset }.reverse.each do |rt|
         case rt
         when Jpeg2ReplaceTarget
-          swf = self.repl_jpeg2(swf, rt.offset, rt.jpeg)
+          swf = repl_jpeg2(swf, rt.offset, rt.jpeg)
         when Lossless2ReplaceTarget
-          swf = self.repl_lossless2(swf, rt.offset, rt.image)
+          swf = repl_lossless2(swf, rt.offset, rt.image)
         when AsVarReplaceTarget
-          swf = self.repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offset)
+          swf = repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offset)
         when SpriteReplaceTarget
-          swf = self.repl_sprite(swf, rt.offset, rt.define_tags, rt.frame_count, rt.control_tags)
+          swf = repl_sprite(swf, rt.offset, rt.target_define_tags_string, rt.frame_count, rt.target_control_tags_string)
         end
       end
       swf
@@ -28,7 +28,7 @@ module SwfRuby
       swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
       define_tags.force_encoding("ASCII-8BIT") if define_tags.respond_to? :force_encoding
       control_tags.force_encoding("ASCII-8BIT") if control_tags.respond_to? :force_encoding
-      record_header = swf[do_action_offset, 2].unpack("v").first
+      record_header = swf[offset, 2].unpack("v").first
       # tag check
       raise ReplaceTargetError if (record_header >> 6) & 1023 != 39
       # error for short header (not implemented yet.)

@@ -45,10 +45,10 @@ module SwfRuby
     # 指定したインスタンス変数名に対するSpriteReplaceTargetを生成する
     def self.build_by_instance_var_name(swf_dumper, var_name, swf)
       refer_character_id = nil
-      refer_sprite_indices = {}
+      sprite_indices = {}
       swf_dumper.tags.each_with_index do |t,i|
-        if t.refer_character_id
-          refer_sprite_indices[t.refer_character_id] = i
+        if t.character_id
+          sprite_indices[t.character_id] = i
         end
         if var_name == t.refer_character_inst_name
           refer_character_id = t.refer_character_id
@@ -56,7 +56,7 @@ module SwfRuby
         end
       end
       raise ReplaceTargetError unless refer_character_id
-      offset = swf_dumper.tags_addresses[refer_sprite_indices[refer_character_id]]
+      offset = swf_dumper.tags_addresses[sprite_indices[refer_character_id]]
       from_character_id = (swf_dumper.tags.collect { |t| t.define_tag? ? t.character_id : nil }).compact.max + 1
       srt = SpriteReplaceTarget.new(offset, swf)
       srt.target_define_tags_string = srt.build_define_tags_string(from_character_id)
@@ -69,8 +69,10 @@ module SwfRuby
     def build_define_tags_string(from_character_id)
       str = ""
       @define_tags.each_with_index do |t, i|
-        @idmap[t.character_id] = i
-        str << t.rawdata_with_define_character_id(from_character_id + i)
+        if t.character_id
+          @idmap[t.character_id] = from_character_id + i
+          str << t.rawdata_with_define_character_id(@idmap[t.character_id])
+        end
       end
       str
     end

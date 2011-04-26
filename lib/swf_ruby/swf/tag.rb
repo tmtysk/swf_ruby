@@ -12,6 +12,7 @@ module SwfRuby
       attr_reader :refer_character_id
       attr_reader :refer_character_id_offset
       attr_reader :refer_character_inst_name
+      attr_reader :refer_bitmap_offsets_to_ids
 
       def initialize(swf)
         swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
@@ -89,6 +90,18 @@ module SwfRuby
         when "RemoveObject"
           @refer_character_id_offset = data_offset
           @refer_character_id = @data[0, 2].unpack("v").first
+        when "DefineShape"
+        when "DefineShape2"
+        when "DefineShape3"
+          @refer_bitmap_offsets_to_ids = {}
+          rect = SwfRuby::Swf::Rectangle.new(@data[0..-1])
+          offset = 2+rect.length
+          shapewithstyle = SwfRuby::Swf::Shapewithstyle.new(@data[offset..-1])
+          shapewithstyle.fill_style_with_offset.each do |fs_offset, fs|
+            @refer_bitmap_offsets_to_ids[offset + fs_offset + fs.bitmap_id_offset] = fs.bitmap_id
+          end
+        when "DefineShape4"
+          # TODO
         else 
           # do nothing.
         end
