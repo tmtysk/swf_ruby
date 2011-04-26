@@ -14,21 +14,41 @@ module SwfRuby
         when AsVarReplaceTarget
           swf = self.repl_action_push_string(swf, rt.do_action_offset, rt.offset, rt.str, rt.parent_sprite_offset)
         when SpriteReplaceTarget
-          swf = self.repl_sprite(swf, rt.offset, rt.refer_character_id, rt.define_tags, rt.control_tags)
+          swf = self.repl_sprite(swf, rt.offset, rt.define_tags, rt.frame_count, rt.control_tags)
         end
       end
       swf
     end
 
-    protected
+    private
 
-    # DefineSpriteを置換. (厳密にはインスタンス変数が参照する新しいDefineSpriteを挿入.)
-    # 新しいSWFが含むDefine系タグは、DefineSpriteの直前に挿入する.
-    def repl_sprite(swf, offset, refer_character_id, define_tags, control_tags)
-      # TODO
+    # 対象オフセット位置にあるDefineSpriteを指定したControlTags文字列で置換.
+    # 新しいSprite含むDefineTagsは、DefineSpriteの直前に挿入する.
+    def repl_sprite(swf, offset, define_tags, frame_count, control_tags)
+      swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
+      define_tags.force_encoding("ASCII-8BIT") if define_tags.respond_to? :force_encoding
+      control_tags.force_encoding("ASCII-8BIT") if control_tags.respond_to? :force_encoding
+      record_header = swf[do_action_offset, 2].unpack("v").first
+      # tag check
+      raise ReplaceTargetError if (record_header >> 6) & 1023 != 39
+      # error for short header (not implemented yet.)
+      raise ReplaceTargetError if record_header & 63 < 63
+      # rewrite frame count
+      swf[offset+8, 2] = [frame_count].pack("v")
+      # rewrite control tag and length
+      sprite_len = swf[offset+2, 4].unpack("i").first
+      old_control_tags_len = sprite_len - 10
+      delta_control_tags_len = control_tags.length - old_control_tags_len
+      swf[offset+10, old_control_tags_len] = control_tags
+      swf[offset+2, 4] = [sprite_len + delta_control_tags_len].pack("V")
+      # insert define tags before define sprite
+      swf[offset, 0] = define_tags
+      # rewrite swf header
+      swf[4, 4] = [swf[4, 4].unpack("V").first + define_tags.length + delta_control_tags_len].pack("V")
+      swf
     end
 
-    # ActionScriptに含まれる文字列を置換.
+    # 対象オフセット位置にあるActionPushデータを置換.
     def repl_action_push_string(swf, do_action_offset, action_push_offset, str, parent_sprite_offset = nil)
       swf.force_encoding("ASCII-8BIT") if swf.respond_to? :force_encoding
       str.force_encoding("ASCII-8BIT") if str.respond_to? :force_encoding
@@ -38,7 +58,7 @@ module SwfRuby
       # action check
       raise ReplaceTargetError if swf[action_push_offset].chr.unpack("C").first != 0x96
       raise ReplaceTargetError if swf[action_push_offset + 3].chr.unpack("C").first != 0
-      # error on short header
+      # error for short header (not implemented yet.)
       raise ReplaceTargetError if record_header & 63 < 63
       # calc length
       do_action_len = swf[do_action_offset+2, 4].unpack("i").first
@@ -151,6 +171,4 @@ module SwfRuby
     end
   end
 
-  # 置換対象指定エラー.
-  class ReplaceTargetError < StandardError; end
 end

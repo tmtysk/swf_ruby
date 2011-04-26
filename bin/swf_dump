@@ -14,15 +14,18 @@ swf.open(ARGV[0])
 swf.tags.each_with_index do |tag, i|
   character_id = tag.character_id ? "character_id: #{tag.character_id}, " : ""
   refer_character_id = tag.refer_character_id ? "refer_character_id: #{tag.refer_character_id}, " : ""
-  refer_character_name = tag.refer_character_name ? "refer_character_name: #{tag.refer_character_name}, " : ""
-  print "#{SwfRuby::Swf::TAG_TYPE[tag.code]}, offset: #{swf.tags_addresses[i]}, #{character_id}#{refer_character_id}#{refer_character_name}length: #{tag.length}\n"
+  refer_character_inst_name = tag.refer_character_inst_name ? "refer_character_inst_name: #{tag.refer_character_inst_name}, " : ""
+  print "#{SwfRuby::Swf::TAG_TYPE[tag.code]}, offset: #{swf.tags_addresses[i]}, #{character_id}#{refer_character_id}#{refer_character_inst_name}length: #{tag.length}\n"
   if tag.code == 39
     # DefineSprite
     sd = SwfRuby::SpriteDumper.new
     sd.dump(tag)
     print "  Sprite ID: #{sd.sprite_id}, Frame Count: #{sd.frame_count}\n"
     sd.tags.each_with_index do |tag2, k|
-      print "    #{SwfRuby::Swf::TAG_TYPE[tag2.code]}, offset: #{sd.tags_addresses[k]}, length: #{tag2.length}\n"
+      character_id = tag2.character_id ? "character_id: #{tag2.character_id}, " : ""
+      refer_character_id = tag2.refer_character_id ? "refer_character_id: #{tag2.refer_character_id}, " : ""
+      refer_character_inst_name = tag2.refer_character_inst_name ? "refer_character_inst_name: #{tag2.refer_character_inst_name}, " : ""
+      print "    #{SwfRuby::Swf::TAG_TYPE[tag2.code]}, offset: #{sd.tags_addresses[k]}, #{character_id}#{refer_character_id}#{refer_character_inst_name}length: #{tag2.length}\n"
       if tag2.code == 12
         # DoAction
         dad = SwfRuby::DoActionDumper.new

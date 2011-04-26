@@ -60,7 +60,7 @@ module SwfRuby
               cxtfm = SwfRuby::Swf::Cxformwithalpha.new(@data[offset..-1])
               offset += cxtfm.length
             end
-            offset += 2 if flags & 16
+            offset += 2 if flags & 16 == 16
             @refer_character_inst_name = SwfRuby::Swf::SwfString.new(@data[offset..-1]).string
           end
         when "PlaceObject3"

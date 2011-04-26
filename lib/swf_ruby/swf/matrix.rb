@@ -14,7 +14,7 @@ module SwfRuby
       attr_accessor :n_translate_bits
       attr_accessor :translate_x
       attr_accessor :translate_y
-      attr_reader :length
+      attr_reader :length # byte_aligned
 
       def initialize(bytearray)
         bits_str = bytearray.unpack("B*").first
@@ -41,7 +41,8 @@ module SwfRuby
         @translate_x = bits_str[offset, self.n_translate_bits].to_i(2)
         @translate_y = bits_str[offset+self.n_translate_bits, self.n_translate_bits].to_i(2)
         offset += 2 * self.n_translate_bits
-        @length = offset
+        @length = offset >> 3
+        @length += 1 if offset & 7 > 0
         self
       end
     end

@@ -14,7 +14,7 @@ module SwfRuby
       attr_accessor :green_add_term
       attr_accessor :blue_add_term
       attr_accessor :alpha_add_term
-      attr_reader :length
+      attr_reader :length # byte_aligned
 
       def initialize(bytearray)
         bits_str = bytearray.unpack("B*").first
@@ -38,7 +38,8 @@ module SwfRuby
           @alpha_add_term = bits_str[offset+3*@nbits, @nbits].to_i(2)
           offset += 4 * @nbits
         end
-        @length = offset
+        @length = offset >> 3
+        @length += 1 if offset & 7 > 0
         self
       end
     end

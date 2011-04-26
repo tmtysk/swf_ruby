@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+#  vim: set fileencoding=utf-8 filetype=ruby ts=2 : 
+# SWF中の指定したインスタンス変数名で設置されているDefineSpriteを入れ替える.
+require 'swf_ruby'
+
+if ARGV.size != 3
+  print "Specify target swf path, sprite instance variable name, and swf path to embed for arguments.\n"
+  exit
+end
+
+swf_dumper = SwfRuby::SwfDumper.new
+swf_dumper.open(ARGV[0])
+sprite_swf = File.open(ARGV[2], "rb").read
+
+repl_target = SwfRuby::SpriteReplaceTarget.build_by_instance_var_name(swf_dumper, ARGV[1], sprite_swf)
+
+st = SwfRuby::SwfTamperer.new
+
+print st.replace(swf_dumper.swf.dup, repl_target)

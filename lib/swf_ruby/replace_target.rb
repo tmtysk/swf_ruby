@@ -25,7 +25,7 @@ module SwfRuby
 
   class SpriteReplaceTarget < ReplaceTarget
     attr_accessor :swf
-    attr_accessor :refer_character_id
+    attr_accessor :frame_count
     attr_accessor :define_tags
     attr_accessor :control_tags
     attr_accessor :idmap
@@ -36,6 +36,7 @@ module SwfRuby
       @offset = offset
       @swf = swf
       @target_swf_dumper = SwfDumper.new.dump(@swf)
+      @frame_count = @target_swf_dumper.header.frame_count
       @define_tags = @target_swf_dumper.tags.select { |t| t.define_tag? }
       @control_tags = @target_swf_dumper.tags - @define_tags
       @idmap = {}
@@ -43,12 +44,24 @@ module SwfRuby
 
     # 指定したインスタンス変数名に対するSpriteReplaceTargetを生成する
     def self.build_by_instance_var_name(swf_dumper, var_name, swf)
-      # TODO var_name に対応する DefineSprite の offset の取得.
-      @refer_character_id = (swf_dumper.tags.collect { |t| t.define_tag? ? t.character_id : nil }).compact.max + 1
-      from_character_id = @refer_character_id + 1
+      refer_character_id = nil
+      refer_sprite_indices = {}
+      swf_dumper.tags.each_with_index do |t,i|
+        if t.refer_character_id
+          refer_sprite_indices[t.refer_character_id] = i
+        end
+        if var_name == t.refer_character_inst_name
+          refer_character_id = t.refer_character_id
+          break
+        end
+      end
+      raise ReplaceTargetError unless refer_character_id
+      offset = swf_dumper.tags_addresses[refer_sprite_indices[refer_character_id]]
+      from_character_id = (swf_dumper.tags.collect { |t| t.define_tag? ? t.character_id : nil }).compact.max + 1
       srt = SpriteReplaceTarget.new(offset, swf)
       srt.target_define_tags_string = srt.build_define_tags_string(from_character_id)
       srt.target_control_tags_string = srt.build_control_tags_string
+      srt
     end
 
     # 置換するSWFからCharacterIdを付け替えながらDefineタグを抽出する.
@@ -148,4 +161,6 @@ module SwfRuby
     end
   end
 
+  # 置換対象指定エラー.
+  class ReplaceTargetError < StandardError; end
 end
