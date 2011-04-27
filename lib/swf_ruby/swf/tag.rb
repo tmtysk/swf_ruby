@@ -45,7 +45,7 @@ module SwfRuby
           @refer_character_id_offset = data_offset
           @refer_character_id = @data[0, 2].unpack("v").first
         when "PlaceObject2"
-          flags = @data[0].unpack("C").first
+          flags = @data[0, 1].unpack("C").first
           offset = 3
           if flags & 2 == 2
             @refer_character_id_offset = data_offset + offset
@@ -93,15 +93,35 @@ module SwfRuby
         when "DefineShape"
         when "DefineShape2"
         when "DefineShape3"
+          version = Swf::TAG_TYPE[@code][-1].to_i
+          version = 1 if version == 0
           @refer_bitmap_offsets_to_ids = {}
-          rect = SwfRuby::Swf::Rectangle.new(@data[0..-1])
+          rect = SwfRuby::Swf::Rectangle.new(@data[2..-1])
           offset = 2+rect.length
-          shapewithstyle = SwfRuby::Swf::Shapewithstyle.new(@data[offset..-1])
-          shapewithstyle.fill_style_with_offset.each do |fs_offset, fs|
-            @refer_bitmap_offsets_to_ids[offset + fs_offset + fs.bitmap_id_offset] = fs.bitmap_id
+          shapewithstyle = SwfRuby::Swf::Shapewithstyle.new(@data[offset..-1], version)
+          shapewithstyle.fill_styles_with_offset.each do |fs_offset, fs|
+            if fs.bitmap_id
+              o = offset + fs_offset + fs.bitmap_id_offset
+              o += @long_header ? 6 : 2
+              @refer_bitmap_offsets_to_ids[o] = fs.bitmap_id
+            end
           end
         when "DefineShape4"
-          # TODO
+          version = 4
+          @refer_bitmap_offsets_to_ids = {}
+          shape_rect = SwfRuby::Swf::Rectangle.new(@data[2..-1])
+          offset = 2+shape_rect.length
+          edge_rect = SwfRuby::Swf::Rectangle.new(@data[offset..-1])
+          offset += edge_rect.length
+          offset += 1
+          shapewithstyle = SwfRuby::Swf::Shapewithstyle.new(@data[offset..-1], version)
+          shapewithstyle.fill_styles_with_offset.each do |fs_offset, fs|
+            if fs.bitmap_id
+              o = offset + fs_offset + fs.bitmap_id_offset
+              o += @long_header ? 6 : 2
+              @refer_bitmap_offsets_to_ids[o] = fs.bitmap_id
+            end
+          end
         else 
           # do nothing.
         end
@@ -109,10 +129,15 @@ module SwfRuby
         self
       end
 
-      def rawdata_with_define_character_id(character_id)
+      # Define系タグの冒頭のcharacter_id参照を指定のIDに書き換える.
+      # 内部にBitmapIDの参照を含む場合、渡されたidmapから読み替える値を参照し、書き換える.
+      def rawdata_with_define_character_id(idmap, character_id)
         if self.define_tag?
           offset = @long_header ? 6 : 2
           @rawdata[offset, 2] = [character_id].pack("v")
+          @refer_bitmap_offsets_to_ids.each do |bitmap_id_offset, bitmap_id|
+            @rawdata[bitmap_id_offset, 2] = [idmap[bitmap_id]].pack("v")
+          end if @refer_bitmap_offsets_to_ids
         end
         @rawdata
       end

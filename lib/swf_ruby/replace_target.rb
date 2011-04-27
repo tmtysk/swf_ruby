@@ -42,8 +42,19 @@ module SwfRuby
       @idmap = {}
     end
 
+    def self.build_list_by_instance_var_names(swf_dumper, var_name_to_swf)
+      from_character_id = (swf_dumper.tags.collect { |t| t.define_tag? ? t.character_id : nil }).compact.max + 1
+      repl_targets = []
+      var_name_to_swf.each do |var_name, swf|
+        repl_target, from_character_id = SwfRuby::SpriteReplaceTarget.build_by_instance_var_name(swf_dumper, var_name, swf, from_character_id)
+        repl_targets << repl_target
+      end
+      repl_targets
+    end
+
     # 指定したインスタンス変数名に対するSpriteReplaceTargetを生成する
-    def self.build_by_instance_var_name(swf_dumper, var_name, swf)
+    def self.build_by_instance_var_name(swf_dumper, var_name, swf, from_character_id = nil)
+      from_character_id ||= (swf_dumper.tags.collect { |t| t.define_tag? ? t.character_id : nil }).compact.max + 1
       refer_character_id = nil
       sprite_indices = {}
       swf_dumper.tags.each_with_index do |t,i|
@@ -57,29 +68,34 @@ module SwfRuby
       end
       raise ReplaceTargetError unless refer_character_id
       offset = swf_dumper.tags_addresses[sprite_indices[refer_character_id]]
-      from_character_id = (swf_dumper.tags.collect { |t| t.define_tag? ? t.character_id : nil }).compact.max + 1
       srt = SpriteReplaceTarget.new(offset, swf)
-      srt.target_define_tags_string = srt.build_define_tags_string(from_character_id)
+      srt.target_define_tags_string, from_character_id = srt.build_define_tags_string(from_character_id)
       srt.target_control_tags_string = srt.build_control_tags_string
-      srt
+      [srt, from_character_id]
     end
 
     # 置換するSWFからCharacterIdを付け替えながらDefineタグを抽出する.
-    # このとき、CharacterIdの対応付けマップを作成する.
+    # 対象のSWFにBitmapIDの参照が含まれる場合、これも合わせて付け替える.
+    # 同時に、CharacterIdの対応付けマップを作成する.
     def build_define_tags_string(from_character_id)
       str = ""
-      @define_tags.each_with_index do |t, i|
+      @define_tags.each do |t|
         if t.character_id
-          @idmap[t.character_id] = from_character_id + i
-          str << t.rawdata_with_define_character_id(@idmap[t.character_id])
+          from_character_id += 1
+          @idmap[t.character_id] = from_character_id
+          str << t.rawdata_with_define_character_id(@idmap, @idmap[t.character_id])
         end
       end
-      str
+      [str, from_character_id+1]
     end
 
+    # DefineSpriteに埋め込むためのControl tagsのみを抽出する.
+    # 参照先のcharacter_idを変更する必要がある場合は付け替える.
     def build_control_tags_string
       str = ""
+      valid_control_tag_codes = [0, 1, 4, 5, 12, 18, 19, 26, 28, 43, 45, 70, 72]
       @control_tags.each do |t|
+        next unless valid_control_tag_codes.include? t.code
         if @idmap[t.refer_character_id]
           str << t.rawdata_with_refer_character_id(@idmap[t.refer_character_id])
         else

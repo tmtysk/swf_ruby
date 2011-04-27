@@ -18,8 +18,8 @@ module SwfRuby
 
       def initialize(bytearray)
         bits_str = bytearray.unpack("B*").first
-        @has_add_terms = bits_str[0].to_i(2)
-        @has_mult_terms = bits_str[1].to_i(2)
+        @has_add_terms = bits_str[0, 1].to_i(2)
+        @has_mult_terms = bits_str[1, 1].to_i(2)
         @nbits = bits_str[2, 4].to_i(2)
         offset = 6
         if @has_mult_terms == 1

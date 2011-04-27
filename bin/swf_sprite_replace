@@ -12,9 +12,7 @@ swf_dumper = SwfRuby::SwfDumper.new
 swf_dumper.open(ARGV[0])
 sprite_swf = File.open(ARGV[2], "rb").read
 
-repl_targets = [
-  SwfRuby::SpriteReplaceTarget.build_by_instance_var_name(swf_dumper, ARGV[1], sprite_swf)
-]
+repl_targets = SwfRuby::SpriteReplaceTarget.build_list_by_instance_var_names(swf_dumper, { ARGV[1] => sprite_swf })
 
 st = SwfRuby::SwfTamperer.new
 

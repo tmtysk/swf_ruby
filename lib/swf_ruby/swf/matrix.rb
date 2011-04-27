@@ -18,7 +18,7 @@ module SwfRuby
 
       def initialize(bytearray)
         bits_str = bytearray.unpack("B*").first
-        @has_scale = bits_str[0].to_i(2)
+        @has_scale = bits_str[0, 1].to_i(2)
         offset = 1
         if @has_scale == 1
           @n_scale_bits = bits_str[offset, 5].to_i(2)
@@ -27,7 +27,7 @@ module SwfRuby
           @scale_y = bits_str[offset+self.n_scale_bits, self.n_scale_bits].to_i(2)
           offset += 2 * self.n_scale_bits
         end
-        @has_rotate = bits_str[offset].to_i(2)
+        @has_rotate = bits_str[offset, 1].to_i(2)
         offset += 1
         if @has_rotate == 1
           @n_rotate_bits = bits_str[offset, 5].to_i(2)

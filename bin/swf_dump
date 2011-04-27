@@ -15,7 +15,11 @@ swf.tags.each_with_index do |tag, i|
   character_id = tag.character_id ? "character_id: #{tag.character_id}, " : ""
   refer_character_id = tag.refer_character_id ? "refer_character_id: #{tag.refer_character_id}, " : ""
   refer_character_inst_name = tag.refer_character_inst_name ? "refer_character_inst_name: #{tag.refer_character_inst_name}, " : ""
-  print "#{SwfRuby::Swf::TAG_TYPE[tag.code]}, offset: #{swf.tags_addresses[i]}, #{character_id}#{refer_character_id}#{refer_character_inst_name}length: #{tag.length}\n"
+  refer_bitmap_id = ""
+  tag.refer_bitmap_offsets_to_ids.each do |offset, bitmap_id|
+    refer_bitmap_id += "bitmap_id: #{bitmap_id}(offset: #{offset}), "
+  end if tag.refer_bitmap_offsets_to_ids
+  print "#{SwfRuby::Swf::TAG_TYPE[tag.code]}, offset: #{swf.tags_addresses[i]}, #{character_id}#{refer_character_id}#{refer_character_inst_name}#{refer_bitmap_id}length: #{tag.length}\n"
   if tag.code == 39
     # DefineSprite
     sd = SwfRuby::SpriteDumper.new

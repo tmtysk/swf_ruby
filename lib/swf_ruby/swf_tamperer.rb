@@ -36,8 +36,8 @@ module SwfRuby
       # rewrite frame count
       swf[offset+8, 2] = [frame_count].pack("v")
       # rewrite control tag and length
-      sprite_len = swf[offset+2, 4].unpack("i").first
-      old_control_tags_len = sprite_len - 10
+      sprite_len = swf[offset+2, 4].unpack("i").first # without recordheader
+      old_control_tags_len = sprite_len - 4
       delta_control_tags_len = control_tags.length - old_control_tags_len
       swf[offset+10, old_control_tags_len] = control_tags
       swf[offset+2, 4] = [sprite_len + delta_control_tags_len].pack("V")
@@ -61,7 +61,7 @@ module SwfRuby
       # error for short header (not implemented yet.)
       raise ReplaceTargetError if record_header & 63 < 63
       # calc length
-      do_action_len = swf[do_action_offset+2, 4].unpack("i").first
+      do_action_len = swf[do_action_offset+2, 4].unpack("i").first # without recordheader
       action_push_len = swf[action_push_offset+1, 2].unpack("v").first
       org_str_length = action_push_len - 2 # data type & terminated null
       delta_str_length = str.length - org_str_length
