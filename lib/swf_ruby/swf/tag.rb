@@ -90,9 +90,7 @@ module SwfRuby
         when "RemoveObject"
           @refer_character_id_offset = data_offset
           @refer_character_id = @data[0, 2].unpack("v").first
-        when "DefineShape"
-        when "DefineShape2"
-        when "DefineShape3"
+        when "DefineShape", "DefineShape2", "DefineShape3"
           version = Swf::TAG_TYPE[@code][-1].to_i
           version = 1 if version == 0
           @refer_bitmap_offsets_to_ids = {}
@@ -135,9 +133,22 @@ module SwfRuby
         if self.define_tag?
           offset = @long_header ? 6 : 2
           @rawdata[offset, 2] = [character_id].pack("v")
-          @refer_bitmap_offsets_to_ids.each do |bitmap_id_offset, bitmap_id|
-            @rawdata[bitmap_id_offset, 2] = [idmap[bitmap_id]].pack("v")
-          end if @refer_bitmap_offsets_to_ids
+          if Swf::TAG_TYPE[@code] == "DefineSprite"
+            sd = SwfRuby::SpriteDumper.new.dump(self)
+            rdata = ""
+            sd.tags.each do |t|
+              if t.refer_character_id
+                rdata << t.rawdata_with_refer_character_id(idmap[t.refer_character_id])
+              else
+                rdata << t.rawdata
+              end
+            end
+            @rawdata[offset+4..-1] = rdata
+          else
+            @refer_bitmap_offsets_to_ids.each do |bitmap_id_offset, bitmap_id|
+              @rawdata[bitmap_id_offset, 2] = [idmap[bitmap_id]].pack("v")
+            end if @refer_bitmap_offsets_to_ids
+          end
         end
         @rawdata
       end

@@ -31,6 +31,7 @@ module SwfRuby
     attr_accessor :idmap
     attr_accessor :target_define_tags_string
     attr_accessor :target_control_tags_string
+    attr_reader :target_swf_dumper
 
     def initialize(offset, swf)
       @offset = offset
@@ -39,7 +40,7 @@ module SwfRuby
       @frame_count = @target_swf_dumper.header.frame_count
       @define_tags = @target_swf_dumper.tags.select { |t| t.define_tag? }
       @control_tags = @target_swf_dumper.tags - @define_tags
-      @idmap = {}
+      @idmap = { 65535 => 65535 }
     end
 
     def self.build_list_by_instance_var_names(swf_dumper, var_name_to_swf)
@@ -61,10 +62,21 @@ module SwfRuby
         if t.character_id
           sprite_indices[t.character_id] = i
         end
-        if var_name == t.refer_character_inst_name
-          refer_character_id = t.refer_character_id
-          break
+        if Swf::TAG_TYPE[t.code] == "DefineSprite"
+          sd = SwfRuby::SpriteDumper.new
+          sd.dump(t)
+          sd.tags.each do |t2|
+            if var_name == t2.refer_character_inst_name
+              refer_character_id = t2.refer_character_id
+              break
+            end
+          end
+        else
+          if var_name == t.refer_character_inst_name
+            refer_character_id = t.refer_character_id
+          end
         end
+        break if refer_character_id
       end
       raise ReplaceTargetError unless refer_character_id
       offset = swf_dumper.tags_addresses[sprite_indices[refer_character_id]]
