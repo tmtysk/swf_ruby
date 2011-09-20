@@ -12,7 +12,7 @@ module SwfRuby
 
       def initialize(bytearray, shape_version)
         @shape_version = shape_version
-        bits_str = bytearray[0, 1].unpack("B").first
+        bits_str = bytearray[0, 1].unpack("B*").first
         @spread_mode = bits_str[0, 2].to_i(2)
         @interpolation_mode = bits_str[2, 2].to_i(2)
         @num_gradients = bits_str[4, 4].to_i(2)
