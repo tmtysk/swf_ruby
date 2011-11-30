@@ -143,7 +143,7 @@ module SwfRuby
         else
           raise ReplaceTargetError
         end
-      elsif format == 5
+      elsif lossless.format == 5
         if org_format == 3
           org_image_length = swf[offset+2, 4].unpack("i").first - 8
           delta_length = lossless.zlib_bitmap_data.size - org_image_length - 1
