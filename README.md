@@ -1,6 +1,8 @@
 SwfRuby
 =======
 
+[![endorse](http://api.coderwall.com/tmtysk/endorsecount.png)](http://coderwall.com/tmtysk)
+
 SwfRuby is a utilities to dump or manipulate a SWF with Ruby.
 
 * features
