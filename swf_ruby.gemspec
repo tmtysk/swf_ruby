@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.name        = "swf_ruby"
   s.version     = SwfRuby::VERSION
   s.platform    = Gem::Platform::RUBY
-  s.authors     = []
+  s.authors     = ["tmtysk"]
   s.email       = []
   s.homepage    = "http://github.com/tmtysk/swf_ruby"
   s.summary     = "Utilities to dump or manipulate Swf binary file."

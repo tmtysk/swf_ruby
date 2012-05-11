@@ -12,7 +12,7 @@ SwfRuby is a utilities to dump or manipulate a SWF with Ruby.
   * SwfRuby::SwfTamperer
     * Manipulating(replagcing) resources in SWF.
     * Used from 'swf_jpeg_replace', 'swf_lossless_replace', 'swf_as_var_replace' and 'swf_sprite_replace' command.
-  * compatible on ruby-1.8.7 and ruby-1.9.2.
+  * compatible on ruby-1.8.7 and ruby-1.9.3.
 
 Dependencies
 ============
