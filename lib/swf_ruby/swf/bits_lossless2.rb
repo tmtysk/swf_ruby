@@ -16,7 +16,7 @@ module SwfRuby
         colormap = []
         # creating colormap to check number of colors
         image.get_pixels(0, 0, image.columns, image.rows).each_with_index do |pixel,i|
-          break if colormap.length > 255
+          break if colormap.length > 256
           idx = colormap.index(pixel)
           if idx
             data << [idx].pack("C")
@@ -31,7 +31,7 @@ module SwfRuby
         end
 
         # checking image format by size of colormap
-        if colormap.length > 255
+        if colormap.length > 256
           # format=5
           # reset and re-build data_stream without colopmap
           data = ""
