@@ -120,14 +120,18 @@ module SwfRuby
 
   class AsVarReplaceTarget < ReplaceTarget
     attr_accessor :do_action_offset
-    attr_accessor :str
     attr_accessor :parent_sprite_offset
+    attr_reader :str
 
     def initialize(action_push_offset, do_action_offset, str, parent_sprite_offset = nil)
       @offset = action_push_offset
       @do_action_offset = do_action_offset
       @str = str
       @parent_sprite_offset = parent_sprite_offset
+    end
+
+    def str=(str)
+      @str << str
     end
 
     # 指定したAS変数名に対するAsVarReplaceTargetのリストを生成する
@@ -164,27 +168,36 @@ module SwfRuby
       if sprite_dumper
         do_action_offset = parent_sprite_offset + sprite_dumper.tags_addresses[do_action_index]
         dad.dump(swf_dumper.swf[do_action_offset, sprite_dumper.tags[do_action_index].length])
-      else 
+      else
         do_action_offset = swf_dumper.tags_addresses[do_action_index]
         dad.dump(swf_dumper.swf[do_action_offset, swf_dumper.tags[do_action_index].length])
       end
       dad.actions.each_with_index do |ar, i|
-        # ActionPush, ActionPush, SetVariableの並びを検出したら変数名をチェック.
+        # ActionPush, SetVariableの並びを検出したら変数名をチェック.
         action_records.shift if action_records.length > 2
         action_records << ar
-        if ar.code == 29 and
-          action_records[0] and
-          action_records[0].code == 150 and
-          action_records[0].data.delete("\0") == var_name and
-          action_records[1].code == 150
-          # 対象の代入式を発見.
-          ap = Swf::ActionPush.new(action_records[1])
-          as_var_replace_targets << AsVarReplaceTarget.new(
-            do_action_offset + dad.actions_addresses[i] - action_records[1].length,
-            do_action_offset,
-            "",
-            parent_sprite_offset
-          )
+        if ar.code == 29 && action_records[-2] && action_records[-2].code == 150
+          # 直前のActionPushが複数データをpushしているかどうかチェック.
+          ars = action_records[-2].data.split("\0").reject { |e| e.empty? }
+          if ars[0] == var_name
+            if ars[1]
+              # 複数データpushなので\0\0 separatedなデータをつくる
+              as_var_replace_targets << AsVarReplaceTarget.new(
+                do_action_offset + dad.actions_addresses[i] - action_records[-2].length,
+                do_action_offset,
+                "#{var_name}\0\0",
+                parent_sprite_offset
+              )
+            end
+          elsif action_records[-3] && action_records[-3].code == 150 && action_records[-3].data.delete("\0") == var_name
+            # 連続ActionPush
+            as_var_replace_targets << AsVarReplaceTarget.new(
+            do_action_offset + dad.actions_addresses[i] - action_records[-2].length,
+              do_action_offset,
+              "",
+              parent_sprite_offset
+            )
+          end
         end
       end
       as_var_replace_targets
