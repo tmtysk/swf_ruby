@@ -5,8 +5,8 @@ module SwfRuby
     class BitsLossless2
       attr_accessor :format, :width, :height, :color_table_size, :zlib_bitmap_data
 
-      ShiftDepth = Magick::QuantumDepth - 8
-      MaxRGB = 2 ** Magick::QuantumDepth - 1
+      ShiftDepth = Magick::MAGICKCORE_QUANTUM_DEPTH - 8
+      MaxRGB = 2 ** Magick::MAGICKCORE_QUANTUM_DEPTH - 1
 
       def initialize(image_bytearray)
         image = Magick::Image.from_blob(image_bytearray).first
